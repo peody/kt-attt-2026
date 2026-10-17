@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Thi Trực tuyến - Cơ sở An toàn Thông tin</title>
+    <style>
+        /* --- CSS TỔNG THỂ --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #0d1117; color: #c9d1d9; }
+        
+        /* --- GIAI ĐOẠN 1: TRANG MỒI NHỬ (CHUYÊN NGHIỆP) --- */
+        #login-page {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; text-align: center; padding: 20px;
+            background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+        }
+        .logo-box { font-size: 3rem; color: #58a6ff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(88,166,255,0.5); }
+        .title { font-size: 2rem; color: #ffffff; margin-bottom: 5px; font-weight: 600; }
+        .subtitle { color: #8b949e; margin-bottom: 40px; font-size: 1.1rem; }
+        
+        .container {
+            display: flex; gap: 40px; background: #161b22; padding: 40px; border-radius: 12px;
+            border: 1px solid #30363d; box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            max-width: 800px; width: 100%; justify-content: center; flex-wrap: wrap;
+        }
+
+        /* Phần nhập UID */
+        .input-section { flex: 1; min-width: 300px; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid #30363d; padding-right: 40px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 0.9rem; }
+        .input-group input { 
+            width: 100%; padding: 12px 15px; border-radius: 6px; border: 1px solid #30363d; 
+            background: #0d1117; color: white; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: #58a6ff; box-shadow: 0 0 5px rgba(88,166,255,0.5); }
+        
+        .btn {
+            background: #238636; color: white; border: none; padding: 12px 20px; font-size: 1.1rem;
+            border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%;
+        }
+        .btn:hover { background: #2ea043; }
+
+        /* Phần QR Code */
+        .qr-section { flex: 1; min-width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .qr-box { background: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; width: 180px; height: 180px; }
+        .qr-box img { width: 100%; height: 100%; }
+        .qr-text { color: #8b949e; font-size: 0.9rem; }
+
+        /* Giao diện khi quét QR bằng điện thoại */
+        #qr-scanned-page { display: none; text-align: center; }
+        .success-icon { font-size: 4rem; color: #238636; margin-bottom: 20px; }
+
+        /* --- GIAI ĐOẠN 2: TRAP / RANSOMWARE (HIỆU ỨNG MẠNH) --- */
+        #ransomware-page {
+            display: none; background-color: #b30000; color: #fff; height: 100vh; width: 100vw;
+            position: absolute; top: 0; left: 0; z-index: 9999; flex-direction: column;
+            justify-content: center; align-items: center; font-family: 'Courier New', Courier, monospace; text-align: center;
+        }
+        
+        /* Hiệu ứng giật màn hình (Shake/Glitch) */
+        .shake-effect { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .blink-text { animation: blinker 0.5s linear infinite; color: yellow; font-size: 3rem; font-weight: bold; margin-bottom: 20px; text-transform: uppercase;}
+        @keyframes blinker { 50% { opacity: 0; } }
+        .warning-box { background: rgba(0,0,0,0.8); padding: 30px; border: 3px solid #ffcc00; border-radius: 10px; max-width: 800px; box-shadow: 0 0 30px rgba(0,0,0,1); }
+        .skull { font-size: 5rem; margin-bottom: 10px; animation: blinker 1s linear infinite; }
+        
+        /* Nút ẩn thoát (Góc dưới bên phải) */
+        #secret-btn { position: absolute; bottom: 0; right: 0; width: 100px; height: 100px; background: transparent; border: none; cursor: crosshair; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Âm thanh cảnh báo (Siren) -->
+    <audio id="siren-audio" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- GIAI ĐOẠN 1: TRANG MỒI NHỬ -->
+    <div id="login-page">
+        <div class="logo-box">🛡️</div>
+        <h1 class="title">Cổng Thi Trực Tuyến 2026</h1>
+        <p class="subtitle">Học phần: Cơ sở An toàn Thông tin - Kiểm tra Giữa kỳ</p>
+        
+        <div class="container" id="main-container">
+            <!-- Form nhập UID dành cho người truy cập bằng Link -->
+            <div class="input-section" id="uid-section">
+                <h3 style="margin-bottom: 20px; color: white;">Truy cập bằng UID</h3>
+                <div class="input-group">
+                    <label for="uid">Nhập mã Sinh viên (UID):</label>
+                    <input type="text" id="uid" placeholder="VD: B22DCCN..." autocomplete="off">
+                </div>
+                <button class="btn" onclick="checkUIDAndTrigger()">VÀO PHÒNG THI</button>
+            </div>
+
+            <!-- Mã QR dành cho việc quét -->
+            <div class="qr-section" id="qr-display-section">
+                <h3 style="margin-bottom: 20px; color: white;">Truy cập nhanh</h3>
+                <div class="qr-box">
+                    <!-- Mã QR này sẽ được thay thế bằng mã QR thực tế sinh ra ở Bước 3 -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://github.com" alt="QR Code">
+                </div>
+                <p class="qr-text">Quét mã QR bằng điện thoại để vào thẳng phòng thi không cần nhập UID.</p>
+            </div>
+
+            <!-- Giao diện hiển thị trên ĐIỆN THOẠI SAU KHI QUÉT QR -->
+            <div id="qr-scanned-page" style="display: none; width: 100%;">
+                <div class="success-icon">✔️</div>
+                <h2 style="color: white; margin-bottom: 10px;">Xác thực QR Thành công!</h2>
+                <p style="color: #8b949e; margin-bottom: 30px;">Hệ thống đã nhận diện thiết bị của bạn.</p>
+                <button class="btn" style="padding: 15px 30px; font-size: 1.2rem;" onclick="triggerMalware()">BẮT ĐẦU LÀM BÀI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GIAI ĐOẠN 2: BẪY RANSOMWARE -->
+    <div id="ransomware-page">
+        <div class="skull">☠️</div>
+        <div class="blink-text">CẢNH BÁO: HỆ THỐNG ĐÃ BỊ XÂM NHẬP</div>
+        
+        <div class="warning-box">
+            <p style="font-size: 1.5rem; margin-bottom: 15px; color: #ff4d4d; font-weight: bold;">Toàn bộ dữ liệu trên thiết bị này đang bị mã hóa!</p>
+            <p style="font-size: 1.1rem; line-height: 1.6;">Kết nối mạng của bạn đã bị khống chế. Mọi nỗ lực thoát ra hoặc tắt thiết bị sẽ dẫn đến việc xóa vĩnh viễn khóa giải mã đối với các tài liệu, đồ án và ảnh cá nhân.</p>
+            <p style="margin-top: 20px; font-size: 1.2rem;">Thiết bị đang truyền tải dữ liệu: <span id="progress" style="color:#00ff00;">14%</span></p>
+        </div>
+
+        <!-- Nút bấm vô hình để tắt hiệu ứng -->
+        <button id="secret-btn" onclick="stopMalware()"></button>
+    </div>
+
+    <script>
+        // KIỂM TRA XEM NGƯỜI DÙNG VÀO BẰNG LINK HAY QUÉT QR
+        // Nếu URL có đuôi ?qr=1 (ví dụ: tenmien.com/?qr=1) thì hiện giao diện quét QR
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('qr') === '1') {
+                document.getElementById('uid-section').style.display = 'none';
+                document.getElementById('qr-display-section').style.display = 'none';
+                document.getElementById('qr-scanned-page').style.display = 'block';
+            }
+        };
+
+        // Hàm kiểm tra form UID
+        function checkUIDAndTrigger() {
+            const uid = document.getElementById('uid').value;
+            if(uid.trim() === "") {
+                alert("Vui lòng nhập Mã Sinh Viên (UID)!");
+                return;
+            }
+            triggerMalware();
+        }
+
+        // HÀM KÍCH HOẠT BẪY (Cốt lõi)
+        function triggerMalware() {
+            // 1. Ép Fullscreen
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+
+            // 2. Chuyển giao diện sang Ransomware và thêm hiệu ứng giật màn hình
+            document.getElementById('login-page').style.display = 'none';
+            let ransomwarePage = document.getElementById('ransomware-page');
+            ransomwarePage.style.display = 'flex';
+            ransomwarePage.classList.add('shake-effect'); // Thêm class giật màn hình
+
+            // 3. Phát âm thanh cảnh báo (Siren)
+            let audio = document.getElementById('siren-audio');
+            audio.play().catch(err => console.log("Trình duyệt chặn Audio:", err));
+
+            // 4. Rung điện thoại (Vibration API - Chỉ hoạt động trên Mobile)
+            if (navigator.vibrate) {
+                // Rung liên tục theo nhịp: Rung 500ms, nghỉ 200ms...
+                navigator.vibrate([500, 200, 500, 200, 800, 200, 1000, 200, 500, 200, 2000]);
+            }
+
+            // 5. Hiệu ứng % tải dữ liệu tăng dần cho chân thực
+            let progress = 14;
+            setInterval(() => {
+                if(progress < 99) {
+                    progress += Math.floor(Math.random() * 5);
+                    if(progress > 99) progress = 99;
+                    document.getElementById('progress').innerText = progress + '%';
+                }
+            }, 800);
+        }
+
+        // HÀM DỪNG HIỆU ỨNG (Dành cho người thuyết trình)
+        function stopMalware() {
+            // Tắt âm thanh
+            let audio = document.getElementById('siren-audio');
+            audio.pause();
+            audio.currentTime = 0;
+
+            // Dừng rung
+            if (navigator.vibrate) navigator.vibrate(0);
+
+            // Tắt Fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => {});
+            }
+
+            // Dừng giật màn hình và đổi thông báo
+            let ransomwarePage = document.getElementById('ransomware-page');
+            ransomwarePage.classList.remove('shake-effect');
+            ransomwarePage.innerHTML = `
+                <h1 style="color: #2ecc71; font-size: 3rem; margin-bottom: 20px;">✅ BÀI HỌC KẾT THÚC</h1>
+                <p style="font-size: 1.5rem;">Cảm ơn các bạn đã tham gia trải nghiệm mô phỏng tấn công Phishing & QRishing.</p>
+                <p style="font-size: 1.2rem; margin-top: 20px; color: #ccc;">(Bấm F5 để tải lại trang)</p>
+            `;
+        }
+    </script>
+</body>
+</html>
