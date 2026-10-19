@@ -230,12 +230,36 @@
         // - Chỉ hiển thị cảnh báo giáo dục, không phát còi, không rung, không khóa thoát.
         // - Broker công cộng chỉ phù hợp thử nghiệm; không dùng cho dữ liệu nhạy cảm.
         const params = new URLSearchParams(location.search);
-        // Phải trùng với mã phiên cố định trong controller/script.js.
-        const sessionCode = (params.get("sessionCode") || params.get("session") || "CQ2026-01")
-            .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "CQ2026-01";
+        const FIXED_SESSION_CODE = "CQ2026-01";
+        const requestedSessionCode = params.get("sessionCode") || params.get("session");
+        const sessionCode = FIXED_SESSION_CODE;
+        if (requestedSessionCode && requestedSessionCode !== FIXED_SESSION_CODE) {
+            console.warn("URL có mã phiên khác mã phiên cố định; đang dùng CQ2026-01.");
+        }
         const topic = `cyberquest/demo/${sessionCode}`;
         let mqttClient = null;
         let joined = false;
+        let audioContext = null;
+        function unlockDemoAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx && !audioContext) audioContext = new AudioCtx();
+                if (audioContext && audioContext.state === "suspended") audioContext.resume();
+            } catch (e) { console.warn("Audio chưa khả dụng:", e); }
+        }
+        function playDemoAlertTone() {
+            if (!audioContext || audioContext.state !== "running") return;
+            try {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = "sine"; osc.frequency.setValueAtTime(880, audioContext.currentTime);
+                gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.45);
+                osc.connect(gain); gain.connect(audioContext.destination);
+                osc.start(); osc.stop(audioContext.currentTime + 0.46);
+            } catch (e) { console.warn("Không phát được âm báo:", e); }
+        }
 
         document.getElementById("session-code").textContent = sessionCode;
 
@@ -265,6 +289,7 @@
 
         async function joinDemo() {
             if (joined) return;
+            unlockDemoAudio();
             joined = true;
             const status = document.getElementById("connection-status");
             const btn = document.getElementById("join-demo-btn");
@@ -302,6 +327,7 @@
                 let message;
                 try { message = JSON.parse(payload.toString()); } catch (_) { return; }
                 if (message && message.type === "DEMO_ALERT" && joined) {
+                    playDemoAlertTone();
                     showDemoAlert();
                 } else if (message && message.type === "DEMO_END" && joined) {
                     stopMalware();
