@@ -230,8 +230,9 @@
         // - Chỉ hiển thị cảnh báo giáo dục, không phát còi, không rung, không khóa thoát.
         // - Broker công cộng chỉ phù hợp thử nghiệm; không dùng cho dữ liệu nhạy cảm.
         const params = new URLSearchParams(location.search);
-        const sessionCode = (params.get("sessionCode") || params.get("session") || "LOCAL-DEMO")
-            .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "LOCAL-DEMO";
+        // Phải trùng với mã phiên cố định trong controller/script.js.
+        const sessionCode = (params.get("sessionCode") || params.get("session") || "CQ2026-01")
+            .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "CQ2026-01";
         const topic = `cyberquest/demo/${sessionCode}`;
         let mqttClient = null;
         let joined = false;
